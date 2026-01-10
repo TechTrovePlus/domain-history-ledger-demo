@@ -15,3 +15,12 @@ This project prevents reputation laundering by making domain history permanent a
 - Database: SQLite
 - Frontend: HTML, CSS, JavaScript
 - Version Control: Git & GitHub
+
+## Research Foundation
+This project is grounded in prior research on:
+- Blockchain-based reputation system architectures
+- Domain name reputation and lifecycle analysis
+
+The design follows best practices recommended in academic literature by using blockchain only as an immutable
+audit layer while performing all analytics and reputation logic off-chain.
+
