@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.sqlite
+
+# Node / Blockchain
+node_modules/
+build/
+artifacts/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
