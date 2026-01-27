@@ -24,3 +24,27 @@ This project is grounded in prior research on:
 The design follows best practices recommended in academic literature by using blockchain only as an immutable
 audit layer while performing all analytics and reputation logic off-chain.
 
+# Blockchain Module – Domain History & Reputation Ledger
+
+This module contains the smart contract and local blockchain setup for the
+Domain History & Reputation Ledger project.
+
+## Purpose
+The blockchain is used strictly as an immutable audit log to record
+domain lifecycle events such as:
+- Domain registration
+- Ownership changes
+- Verified abuse flags
+
+No reputation scoring or analytics are performed on-chain.
+
+## Tech Stack
+- Solidity ^0.8.x
+- Hardhat (local development)
+- Node.js LTS
+
+## Smart Contract
+- `DomainHistory.sol` – emits immutable domain history events
+
+## Notes
+All analytics, reputation logic, and visualization are handled off-chain.
