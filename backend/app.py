@@ -1,9 +1,11 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 from web3 import Web3
 import sqlite3
 from eth_utils import keccak, to_hex
 
 app = Flask(__name__)
+CORS(app)
 
 # --- CONFIG ---
 DB_PATH = "backend/dns_guard.db"
