@@ -12,7 +12,9 @@ EXPIRED = "EXPIRED"
 RE_REGISTERED = "RE_REGISTERED"
 
 # Security / abuse events
-ABUSE_FLAGGED = "ABUSE_FLAGGED"
+# V1-compatible abuse event type
+ABUSE_FLAG = "ABUSE_FLAG"
+
 
 # ---- Canonical collections ----
 
@@ -22,17 +24,17 @@ ALL_EVENT_TYPES = {
     OWNERSHIP_CHANGED,
     EXPIRED,
     RE_REGISTERED,
-    ABUSE_FLAGGED,
+    ABUSE_FLAG,
 }
 
 # Events that affect long-term trust
 TRUST_RELEVANT_EVENTS = {
     OWNERSHIP_CHANGED,
-    ABUSE_FLAGGED,
+    ABUSE_FLAG,
 }
 
 # Events eligible for blockchain anchoring
 ANCHORABLE_EVENTS = {
     OWNERSHIP_CHANGED,
-    ABUSE_FLAGGED,
+    ABUSE_FLAG,
 }
