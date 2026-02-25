@@ -11,7 +11,7 @@ def init_db():
             domain_name TEXT UNIQUE NOT NULL,
             first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
             current_status TEXT CHECK (
-                current_status IN ('GREEN', 'YELLOW', 'RED')
+                current_status IN ('UNKNOWN', 'GREEN', 'YELLOW', 'RED')
             ) NOT NULL
         )
     ''')
