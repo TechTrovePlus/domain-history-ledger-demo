@@ -18,7 +18,7 @@ def evaluate_status(events: list[dict]) -> str:
     Events must be pre-sorted by event_time ASC.
     """
 
-    now = max(parse_date(e["event_time"]) for e in events)
+    now = datetime.utcnow()
 
     # 🔴 Rule 1 — RED
     for e in events:

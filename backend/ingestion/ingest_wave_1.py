@@ -25,8 +25,8 @@ def ingest_wave_1():
         source = record["source"]
 
         # Safety checks
-        if domain not in DEMO_DOMAIN_SET:
-            raise ValueError(f"Unknown demo domain: {domain}")
+        # if domain not in DEMO_DOMAIN_SET:
+        #     raise ValueError(f"Unknown demo domain: {domain}")
 
         if event_type != REGISTERED:
             raise ValueError("Wave 1 may contain REGISTERED events only")

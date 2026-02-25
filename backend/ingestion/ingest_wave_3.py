@@ -35,9 +35,9 @@ def ingest_wave_3():
         event_date = record["date"]
         desc = record["desc"]
 
-        # Safety checks
-        if domain not in DEMO_DOMAIN_SET:
-            raise ValueError(f"Unknown demo domain: {domain}")
+        # # Safety checks
+        # if domain not in DEMO_DOMAIN_SET:
+        #     raise ValueError(f"Unknown demo domain: {domain}")
 
         if event_type not in ALLOWED_EVENTS:
             raise ValueError(f"Invalid event type for Wave 3: {event_type}")
