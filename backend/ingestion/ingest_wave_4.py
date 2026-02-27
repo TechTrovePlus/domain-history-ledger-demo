@@ -4,7 +4,7 @@ import json
 import sqlite3
 
 from backend.config.event_types import ABUSE_FLAG
-from backend.config.demo_domains import DEMO_DOMAIN_SET
+from backend.blockchain.notary_client import BlockchainNotary
 
 DB_PATH = "backend/dns_guard.db"
 WAVE_FILE = "backend/data/abuse_feed_2.json"
@@ -16,6 +16,9 @@ def ingest_wave_4():
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    # 🔗 Initialize blockchain notary
+    notary = BlockchainNotary()
 
     for record in records:
         domain = record["domain"]
@@ -42,21 +45,32 @@ def ingest_wave_4():
 
         domain_id = row[0]
 
-        # Append-only abuse insert
+        # 🔐 Anchor abuse event on blockchain (selective)
+        integrity_hash, tx_hash = notary.anchor_event(
+            domain,
+            event_type,
+            event_date
+        )
+
+        # Append-only abuse insert WITH blockchain proof
         cursor.execute(
             """
             INSERT INTO domain_events (
                 domain_id,
                 event_type,
                 event_time,
-                description
-            ) VALUES (?, ?, ?, ?)
+                description,
+                integrity_hash,
+                blockchain_tx
+            ) VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 domain_id,
                 event_type,
                 event_date,
-                desc
+                desc,
+                integrity_hash,
+                tx_hash
             )
         )
 

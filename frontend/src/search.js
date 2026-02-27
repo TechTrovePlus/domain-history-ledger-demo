@@ -1,18 +1,33 @@
 let lastSearchedDomain = null;
 
+const searchBtn = document.getElementById("searchBtn");
+const timelineBtn = document.getElementById("timelineBtn");
+const resultDiv = document.getElementById("result");
+const timelineDiv = document.getElementById("timeline");
+
 async function searchDomain() {
-  const domain = document.getElementById("domainInput").value;
-  const resultDiv = document.getElementById("result");
-  const timelineDiv = document.getElementById("timeline");
+  const domain = document.getElementById("domainInput").value.trim();
+  const analysisConsole = document.getElementById("analysisConsole");
+  const consoleLogs = document.getElementById("consoleLogs");
+  const analysisStatus = document.getElementById("analysisStatus");
 
   if (!domain) {
-    resultDiv.innerHTML = "Please enter a domain.";
+    resultDiv.innerHTML = `<div class="result UNKNOWN">Please enter a domain to search.</div>`;
     return;
   }
 
   lastSearchedDomain = domain;
-  resultDiv.innerHTML = "Searching...";
+
+  // Reset UI
+  resultDiv.innerHTML = "";
   timelineDiv.innerHTML = "";
+  timelineBtn.style.display = "none";
+  searchBtn.disabled = true;
+
+  // Setup Console
+  analysisConsole.style.display = "block";
+  consoleLogs.innerHTML = "";
+  analysisStatus.innerText = "Initializing scan...";
 
   try {
     const response = await fetch(
@@ -20,37 +35,64 @@ async function searchDomain() {
     );
     const data = await response.json();
 
+    // Stream logs with a small delay for visual effect
+    if (data.processing_logs) {
+      for (const log of data.processing_logs) {
+        const logEl = document.createElement("div");
+        logEl.className = `log-entry ${log.status}`;
+        logEl.innerHTML = `<span class="log-icon"></span> ${log.step}`;
+        consoleLogs.appendChild(logEl);
+
+        // Auto-scroll console
+        consoleLogs.scrollTop = consoleLogs.scrollHeight;
+
+        // Simulate processing time
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+    }
+
+    analysisStatus.innerText = "Scan complete.";
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     resultDiv.className = `result ${data.status}`;
 
-    resultDiv.innerHTML = `
-      <div><span class="label">Status:</span> ${data.status}</div>
-      <div><span class="label">Reason:</span> ${data.reason}</div>
-    `;
-
+    let proofHtml = "";
     if (data.blockchain_proof) {
-      resultDiv.innerHTML += `
-        <div class="proof">
-          <span class="label">Blockchain Proof:</span><br/>
-          Hash: ${data.blockchain_proof.integrity_hash}<br/>
-          Tx: ${data.blockchain_proof.transaction}
+      proofHtml = `
+        <div class="proof-card">
+          <strong>Blockchain Verification</strong>
+          <div><span class="label">Integrity Hash:</span> ${data.blockchain_proof.integrity_hash}</div>
+          <div style="margin-top: 8px;"><span class="label">Transaction ID:</span> ${data.blockchain_proof.transaction}</div>
         </div>
       `;
     }
 
+    resultDiv.innerHTML = `
+      <div class="status-badge">${data.status}</div>
+      <div class="label">Current Status</div>
+      <div class="value">${data.status}</div>
+      
+      <div class="label">Analysis Reason</div>
+      <div class="value" style="font-size: 1rem; color: var(--text-muted);">${data.reason}</div>
+      
+      ${proofHtml}
+    `;
+
+    timelineBtn.style.display = "block";
+
   } catch (err) {
-    resultDiv.innerHTML = "Error contacting backend.";
+    analysisStatus.innerText = "Scan failed.";
+    resultDiv.innerHTML = `<div class="result RED">Error connecting to the DNS Guard backend. Please ensure the server is running.</div>`;
+  } finally {
+    searchBtn.disabled = false;
   }
 }
 
 async function loadTimeline() {
-  const timelineDiv = document.getElementById("timeline");
+  if (!lastSearchedDomain) return;
 
-  if (!lastSearchedDomain) {
-    timelineDiv.innerHTML = "Search for a domain first.";
-    return;
-  }
-
-  timelineDiv.innerHTML = "Loading timeline...";
+  timelineDiv.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
+  timelineBtn.disabled = true;
 
   try {
     const response = await fetch(
@@ -59,21 +101,19 @@ async function loadTimeline() {
     const data = await response.json();
 
     if (!data.events || data.events.length === 0) {
-      timelineDiv.innerHTML = "No timeline data available.";
+      timelineDiv.innerHTML = `<div class="result UNKNOWN">No historical events recorded for this domain.</div>`;
       return;
     }
 
-    timelineDiv.innerHTML = "<h3>Domain Timeline</h3>";
+    timelineDiv.innerHTML = `<h3 class="timeline-header">Domain History Ledger</h3>`;
 
     data.events.forEach(event => {
       let proofHtml = "";
-
       if (event.blockchain_proof) {
         proofHtml = `
-          <div class="proof">
-            <strong>Blockchain Proof</strong><br/>
-            Hash: ${event.blockchain_proof.integrity_hash}<br/>
-            Tx: ${event.blockchain_proof.transaction}
+          <div class="proof-card">
+            <strong>Block Proof</strong>
+            <div style="font-size: 0.75rem; overflow-wrap: break-word;">${event.blockchain_proof.integrity_hash}</div>
           </div>
         `;
       }
@@ -81,14 +121,24 @@ async function loadTimeline() {
       timelineDiv.innerHTML += `
         <div class="timeline-event ${event.event_type}">
           <div class="event-date">${event.date}</div>
-          <div><strong>${event.event_type}</strong></div>
-          <div>${event.description}</div>
+          <div class="event-type">${event.event_type.replace('_', ' ')}</div>
+          <div class="event-desc">${event.description}</div>
           ${proofHtml}
         </div>
       `;
     });
 
   } catch (err) {
-    timelineDiv.innerHTML = "Error loading timeline.";
+    timelineDiv.innerHTML = `<div class="result RED">Failed to retrieve timeline data.</div>`;
+  } finally {
+    timelineBtn.disabled = false;
+    timelineBtn.style.display = "none"; // Hide after loading to keep UI clean, or keep it if you want to allow refresh
   }
 }
+
+// Allow Enter key to trigger search
+document.getElementById("domainInput").addEventListener("keypress", function (e) {
+  if (e.key === "Enter") {
+    searchDomain();
+  }
+});

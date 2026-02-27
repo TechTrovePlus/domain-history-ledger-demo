@@ -8,7 +8,7 @@ from backend.config.event_types import (
     EXPIRED,
     RE_REGISTERED,
 )
-from backend.config.demo_domains import DEMO_DOMAIN_SET
+from backend.blockchain.notary_client import BlockchainNotary
 
 DB_PATH = "backend/dns_guard.db"
 WAVE_FILE = "backend/data/registrar_feed_2.json"
@@ -28,6 +28,9 @@ def ingest_wave_3():
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    # 🔗 Initialize blockchain notary
+    notary = BlockchainNotary()
 
     for record in records:
         domain = record["domain"]
@@ -54,6 +57,13 @@ def ingest_wave_3():
 
         domain_id = row[0]
 
+        # 🔐 Anchor high-impact events (e.g. OWNERSHIP_CHANGED)
+        integrity_hash, tx_hash = notary.anchor_event(
+            domain,
+            event_type,
+            event_date
+        )
+
         # --- V2 → V1 EVENT TYPE MAPPING ---
         # V1 schema only allows:
         # REGISTERED, OWNERSHIP_CHANGED, ABUSE_FLAG
@@ -64,21 +74,25 @@ def ingest_wave_3():
             db_event_type = event_type
             db_description = desc
 
-        # Append-only insert (V1-compatible)
+        # Append-only insert with blockchain proof
         cursor.execute(
             """
             INSERT INTO domain_events (
                 domain_id,
                 event_type,
                 event_time,
-                description
-            ) VALUES (?, ?, ?, ?)
+                description,
+                integrity_hash,
+                blockchain_tx
+            ) VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 domain_id,
                 db_event_type,
                 event_date,
-                db_description
+                db_description,
+                integrity_hash,
+                tx_hash
             )
         )
 

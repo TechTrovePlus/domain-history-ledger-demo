@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNS Guard | Control Center</title>
+    <link rel="stylesheet" href="index.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        .admin-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .back-nav {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+        }
+
+        .back-nav:hover {
+            color: var(--primary);
+        }
+
+        .admin-panel {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .admin-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            flex: 1;
+        }
+
+        .admin-action-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text-main);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .admin-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .admin-action-btn.danger {
+            margin-top: 30px;
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--red);
+        }
+
+        .admin-action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--red);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1>Control Center</h1>
+                <p style="color: var(--text-muted); margin-top: 5px;">Manage data ingestion pipelines and system state.
+                </p>
+            </div>
+            <a href="index.html" class="back-nav">
+                <span>←</span> Back to Search
+            </a>
+        </div>
+
+        <div class="admin-panel">
+            <h3>Data Ingestion Pipelines</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">Simulate real-world data feeds by
+                injecting data directly into the system's ledger.</p>
+
+            <div class="admin-grid">
+                <!-- Registrar Card -->
+                <div class="admin-card">
+                    <div class="card-icon">📁</div>
+                    <div class="card-title">Registrar Feed</div>
+                    <div class="card-desc">Manage domain lifecycle events. Controls Waves 1 & 3 of the ingestion
+                        pipeline.</div>
+                    <button class="admin-action-btn" onclick="openSidebar('left')">Open Registrar Console</button>
+                </div>
+
+                <!-- Abuse Card -->
+                <div class="admin-card">
+                    <div class="card-icon">🛡️</div>
+                    <div class="card-title">Abuse Feed</div>
+                    <div class="card-desc">Manage threat intelligence data. Controls Waves 2 & 4 of the ingestion
+                        pipeline.</div>
+                    <button class="admin-action-btn" onclick="openSidebar('right')">Open Abuse Console</button>
+                </div>
+            </div>
+
+            <!-- Analysis Console (Moved from search to here for admin feedback) -->
+            <div id="analysisConsole" class="analysis-console" style="margin-top: 40px; display: none;">
+                <div class="analysis-header">
+                    <span class="console-title">System Ingestion Log</span>
+                    <span id="analysisStatus" style="font-size: 0.85rem; color: var(--text-muted);">Waiting...</span>
+                </div>
+                <div id="consoleLogs" class="console-logs">
+                    <!-- Logs injected here -->
+                </div>
+                <div class="console-footer">
+                    DNS Guard Subsystem
+                </div>
+            </div>
+
+            <button class="admin-action-btn danger" onclick="resetSystem()">
+                <span>☢️</span> Reset (Wipe Database)
+            </button>
+        </div>
+    </div>
+
+    <!-- Sidebars (Moved from index.html) -->
+    <div id="sidebarLeft" class="sidebar left">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Registrar Feed</h2>
+            <span class="close-sidebar" onclick="closeSidebars()">×</span>
+        </div>
+        <div class="wave-selector">
+            <div id="tab_registrar_1" class="wave-tab active" onclick="switchWave('registrar', 1)">Wave 1</div>
+            <div id="tab_registrar_2" class="wave-tab" onclick="switchWave('registrar', 2)">Wave 2</div>
+        </div>
+        <p class="sidebar-desc">Manage domain lifecycle events</p>
+        <textarea id="jsonEditorLeft" class="json-editor" spellcheck="false" title="JSON Editor"></textarea>
+        <div class="sidebar-footer">
+            <button onclick="saveFeed('registrar')">Save Changes</button>
+            <button class="inject-btn" onclick="triggerIngest('registrar')">Inject Current Wave</button>
+        </div>
+    </div>
+
+    <div id="sidebarRight" class="sidebar right">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Abuse Feed</h2>
+            <span class="close-sidebar" onclick="closeSidebars()">×</span>
+        </div>
+        <div class="wave-selector">
+            <div id="tab_abuse_1" class="wave-tab active" onclick="switchWave('abuse', 1)">Wave 1</div>
+            <div id="tab_abuse_2" class="wave-tab" onclick="switchWave('abuse', 2)">Wave 2</div>
+        </div>
+        <p class="sidebar-desc">Manage threat intelligence data</p>
+        <textarea id="jsonEditorRight" class="json-editor" spellcheck="false" title="JSON Editor"></textarea>
+        <div class="sidebar-footer">
+            <button onclick="saveFeed('abuse')">Save Changes</button>
+            <button class="inject-btn" onclick="triggerIngest('abuse')">Inject Current Wave</button>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay" onclick="closeSidebars()"></div>
+
+    <!-- Scripts -->
+    <script src="admin.js"></script>
+</body>
+
+</html>
