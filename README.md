@@ -1,178 +1,87 @@
-# 🛡️ DNS Guard
+# 🛡️ DNS Guard (Prototype/Demo Version)
 
-## Domain History & Reputation Ledger
+> **⚠️ PROTOTYPE REPOSITORY:** This repository (`domain-history-ledger-demo`) is a proof-of-concept prototype. It does **not** connect to live APIs. Instead, it uses **mock data waves** to demonstrate the system's capabilities, UI, and smart contract anchoring. It is intended for presentations and architectural validation.
 
-DNS Guard is a mini-project that provides a **permanent, tamper-resistant history of internet domains** by combining traditional databases with blockchain as an **immutable audit log**.
+DNS Guard is a system that provides a **permanent, tamper-resistant history of internet domains** by combining a traditional relational database (for speed and rich queries) with a blockchain smart contract (as an **immutable audit log**).
 
 The system is designed to prevent **domain reputation laundering**, where malicious actors reuse expired or transferred domains by erasing their past abuse history.
 
 ---
 
-## ⚠️ Problem Statement — Reputation Laundering
+## ✨ Features & The "Data Control Center"
 
-Current domain reputation systems suffer from a critical flaw:
+Because this is a prototype, we built a dedicated **Admin UI** to simulate real-world data ingestion.
 
-* When a domain **expires** or **changes ownership**, its historical reputation is often lost.
-* Attackers exploit this gap by re-registering or buying old domains and reusing them for phishing and scams.
-* Users and security tools see the domain as “clean” again.
-
-This creates a **trust reset problem**.
-
----
-
-## 💡 Solution — DNS Guard
-
-DNS Guard solves this by introducing a **Domain History Ledger**:
-
-* Every significant domain event (abuse, ownership change) is recorded.
-* **Critical events are cryptographically anchored on the blockchain** using Keccak-256 hashes.
-* Once anchored, history **cannot be erased or rewritten** — even if the domain changes hands.
-
-The blockchain acts as a **neutral notary**, while all computation remains off-chain.
+*   **Search Interface:** A premium, glassmorphism UI where users can search for domains (e.g., `amazon-deals-support.net`) and view their current "Traffic Light" trust status alongside a historic timeline of events.
+*   **Transparent Analysis:** Real-time console logs appearing on the frontend to visualize the backend Python engine's decision-making process.
+*   **The Control Center (Admin):** A separated engineering dashboard used to simulate live OSINT feeds.
+    *   **Slide-out JSON Editors:** Manually edit and save "Registrar" and "Abuse" feed data directly in the browser.
+    *   **Wave-Based Ingestion:** Inject data in chronological "Waves" (Wave 1 & Wave 2) to watch the database state and blockchain anchor proofs update in real-time.
+    *   **Nuclear Reset:** A one-click button to securely wipe the database and start the demo over from scratch.
 
 ---
 
-## 🏗️ System Architecture (Modules)
+## 🏗️ Technology Stack
 
-### 1️⃣ Blockchain Layer — *The Notary*
+This prototype was built without heavy JavaScript frameworks to keep things blazing fast and easy to understand.
 
-**Technology:** Solidity, Hardhat, Ethereum (Local Test Network)
-
-* Stores **immutable hashes** of domain events.
-* Records:
-
-  * Abuse flags
-  * Ownership changes
-* Does **not** calculate reputation or store domain names.
-* Used selectively for **proof**, not bulk storage.
+*   **Frontend Layer:** Pure HTML, Vanilla JavaScript, and Custom CSS (No frameworks).
+*   **Backend Layer:** Python, Flask API, SQLite database.
+*   **Blockchain Layer:** Solidity Smart Contract, Local Hardhat Node, Ethers.js, `web3.py`.
 
 ---
 
-### 2️⃣ Ingestion Module — *The Watchman*
+## 🚀 How to Run the Demo Locally
 
-**Technology:** Python
+You need three terminal windows to run this full-stack prototype.
 
-* Detects malicious or suspicious domains.
-* In this prototype:
+### 1. Start the Blockchain Notary
+In your first terminal, start the local Ethereum network:
+```bash
+cd blockchain
+npm install
+npx hardhat node
+```
+*(Leave this terminal running. The smart contract is already pre-configured to deploy to this local node).*
 
-  * Uses **mock and curated demo data** to simulate real-world detection.
-* Designed to integrate live OSINT feeds (URLhaus, PhishTank) as **future work**.
+### 2. Start the Backend Engine
+In your second terminal, activate the Python environment and start Flask:
+```bash
+# Windows
+.\venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
 
----
+# Install dependencies (if first time)
+pip install -r backend/requirements.txt
 
-### 3️⃣ Backend & Storage Layer — *The Brain*
+# Start the Flask API
+python -m backend.app
+```
+*(The server will run on `http://localhost:5000`)*
 
-**Technology:** Python, Flask, SQLite
+### 3. Open the Web Application
+Because the frontend uses vanilla web technologies, there is no need for a Node/React dev server!
 
-* Maintains **rich domain records** in SQLite.
-* Maps database records to blockchain transaction proofs.
-* Applies trust logic:
-
-  * **GREEN** – Clean history
-  * **YELLOW** – New domain or recent ownership change
-  * **RED** – Verified abuse history
-
----
-
-### 4️⃣ Presentation Layer — *The Interface*
-
-**Technology:** HTML, CSS (Bootstrap), JavaScript
-
-* Simple, non-technical UI.
-* Allows users to:
-
-  * Search a domain
-  * Instantly see its trust status
-  * Verify whether history is anchored on blockchain
+Simply open your File Explorer/Finder, navigate to `frontend/src/`, and **double-click `index.html`** to open it directly in your web browser.
 
 ---
 
-## 🛠️ Technical Implementation Details
+## 🎮 How to Use the Prototype
 
-### 🔐 Integrity Standard — Keccak-256 Anchoring
-
-DNS Guard uses **Ethereum-native Keccak-256 hashing**:
-
-1. A domain event is detected (e.g., abuse).
-2. A hash is generated off-chain.
-3. The hash is anchored on the blockchain.
-4. Later verification recomputes the hash and checks its existence on-chain.
-
-This ensures:
-
-* Immutability
-* Verifiability
-* Gas efficiency
+1.  Open the web app and click the **"⚙️ Admin"** button in the top right corner.
+2.  Click **"☢️ Reset"** to ensure your database is completely clean.
+3.  Open the **Registrar Feed** sidebar -> Select **Wave 1** -> Click **"Inject Current Wave"**.
+4.  Open the **Abuse Feed** sidebar -> Select **Wave 1** -> Click **"Inject Current Wave"**.
+5.  Click **"← Back to Search"** and type `amazon-deals-support.net` to see the anchored results!
 
 ---
 
-### 🗄️ Database Schema (SQLite)
+## 🗄️ Database Schema & Anchoring
 
-**domains**
+The backend operates on a minimal SQLite schema focusing on Append-Only event tracking.
 
-* `domain_name`
-* `first_seen`
-* `current_status` (GREEN / YELLOW / RED)
-
-**domain_events**
-
-* `event_type` (REGISTERED, OWNERSHIP_CHANGED, ABUSE_FLAG)
-* `event_time`
-* `blockchain_tx`
-* `integrity_hash`
-
----
-
-## 🚀 Demo Workflow
-
-1. User searches a domain in the UI.
-2. Backend retrieves domain data from SQLite.
-3. If applicable, backend verifies the event hash on the blockchain.
-4. UI displays:
-
-   * Traffic-light trust status
-   * Blockchain verification indicator
-
-### Demo Scenarios
-
-* **Clean Domain** → GREEN
-* **Typosquatter / New Domain** → YELLOW
-* **Zombie Domain (Historic Abuse)** → RED (Verified on Blockchain)
-
----
-
-## 🔬 Research Foundation
-
-The project is informed by academic research on:
-
-* Blockchain-based reputation systems
-* Domain lifecycle and reputation persistence
-
-The architecture follows best practices by:
-
-* Using blockchain **only as a trust anchor**
-* Performing analytics and reputation logic **off-chain**
-
----
-
-## 🔮 Future Work
-
-* Integration with live OSINT feeds (URLhaus, PhishTank)
-* Automated ownership change detection
-* Public testnet deployment
-* Evidence hashing (screenshots, reports)
-* Production-grade configuration management
-
----
-
-## 📌 Project Scope Note
-
-This project is a **proof-of-concept prototype** focused on demonstrating:
-
-* Architecture correctness
-* Trust guarantees
-* Immutability of domain history
-
-It prioritizes **reliability and clarity over real-time automation**, making it suitable for academic evaluation and live demonstrations.
-
-
+*   **domains:** Tracks the current cached status (`GREEN`, `YELLOW`, `RED`).
+*   **domain_events:** Tracks the chronological history (`REGISTERED`, `OWNERSHIP_CHANGED`, `ABUSE_FLAG`). 
+    *   When high-risk events (like `ABUSE_FLAG`) occur, a Keccak-256 hash of the event is generated and sent to the local Hardhat smart contract. 
+    *   The resulting Blockchain Transaction Hash (`blockchain_tx`) is stored in the database alongside the event as cryptographic proof.
